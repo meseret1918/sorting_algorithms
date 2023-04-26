@@ -1,99 +1,62 @@
 #include "sort.h"
+
+void move_left(listint_t *curr, listint_t *prev, listint_t **head);
+
 /**
- * swap_head - swaps a node at the beggining of the list
- * @list: Doubly linked list with nodes to sort acording to number n.
- * @aux: auxiliar node to compare
- */
-void swap_head(listint_t **list, listint_t *aux)
-{
-	aux->prev->next = aux->next;
-	if (aux->next)
-		aux->next->prev = aux->prev;
-	aux->next = aux->prev;
-	aux->prev = aux->prev->prev;
-	aux->next->prev = aux;
-	*list = aux;
-}
-/**
- * swap_middle - swaps a node at the middle of the list
- * @aux: auxiliar node to compare
- */
-void swap_middle(listint_t *aux)
-{
-	aux->prev->next = aux->next;
-	aux->next->prev = aux->prev;
-	aux->prev->prev->next = aux;
-	aux->next = aux->prev;
-	aux->prev = aux->next->prev;
-	aux->next->prev = aux;
-}
-/**
- * swap_tail - swaps a node at the end of the list
- * @aux: auxiliar node to compare
- */
-void swap_tail(listint_t *aux)
-{
-	aux->prev->next = aux->next;
-	aux->next = aux->prev;
-	aux->prev->prev->next = aux;
-	aux->prev = aux->next->prev;
-	aux->next->prev = aux;
-}
-/**
- * evaluate_swap - checks the position to do the swap
- * @list: Doubly linked list with nodes to sort acording to number n.
- * @aux: auxiliar node to compare
- */
-void evaluate_swap(listint_t **list, listint_t *aux)
-{
-	if (!aux->prev->prev)
-		swap_head(list, aux);
-	else if (aux->prev->prev && aux->next)
-		swap_middle(aux);
-	else if (!aux->next)
-		swap_tail(aux);
-}
-/**
- * cocktail_sort_list - Cocktail Sort is a variation of Bubble sort.
- * The Bubble sort algorithm always traverses elements from left and
- * moves the largest element to its correct position in first iteration
- * and second largest in second iteration and so on. Cocktail Sort traverses
- * through a given array in both directions alternatively.
- * @list: Doubly linked list with nodes to sort acording to number n.
- */
+* cocktail_sort_list - coctail sort in doubly linked list
+* @list: A Doubly linked list
+*/
+
 void cocktail_sort_list(listint_t **list)
 {
-	listint_t *aux = NULL, *tmp;
-	int swap_flag = 1;
+	listint_t *cur;
+	listint_t *max = NULL;
+	listint_t *min = NULL;
 
-	if (!list || !(*list)->next)
+	if (!list || !(*list) || (*list)->next == NULL)
 		return;
-	aux = tmp = (*list)->next;
-	while (swap_flag)
-	{
-		aux = tmp, swap_flag = 0;
-		while (aux)
+	cur = *list;
+	do {
+		while (cur->next)
 		{
-			if (aux->prev && aux->n < aux->prev->n)
-			{
-				evaluate_swap(list, aux);
-				print_list(*list), swap_flag = 1;
-			}
-			if (aux->next != NULL)
-				aux = aux->next;
+			if (cur->n > cur->next->n)
+				move_left(cur->next, cur, list);
 			else
-				break;
+				cur = cur->next;
 		}
-		aux = aux->prev;
-		while (aux->prev)
+		max = cur;
+		while (cur->prev != min)
 		{
-			if (aux->prev && aux->prev->n > aux->n)
-			{
-				evaluate_swap(list, aux);
-				print_list(*list), swap_flag = 1;
-			}
-			else if (aux->prev)
-				aux = aux->prev;
+			if (cur->n < cur->prev->n)
+				move_left(cur, cur->prev, list);
+			else
+				cur = cur->prev;
 		}
-	}
+		min = cur;
+	} while (min != max);
+}
+
+/**
+* move_left - swaps two members of a list
+*
+* @curr: current node
+* @prev: previous node
+* @head: head of list
+*/
+void move_left(listint_t *curr, listint_t *prev, listint_t **head)
+{
+	listint_t *swap1 = curr->next;
+	listint_t *swap2 = prev->prev;
+
+	if (swap1 != NULL)
+		swap1->prev = prev;
+	if (swap2 != NULL)
+		swap2->next = curr;
+	curr->prev = swap2;
+	prev->next = swap1;
+	curr->next = prev;
+	prev->prev = curr;
+	if (*head == prev)
+		*head = curr;
+	print_list(*head);
 }
