@@ -1,73 +1,99 @@
 #include "sort.h"
-
 /**
- * dll_adj_swap - swaps two adjacent nodes of a doubly linked list
- * @list: doubly linked list of integers to be sorted
- * @left: node closer to head, right->prev
- * @right: node closer to tail, left->next
+ * swap_head - swaps a node at the beggining of the list
+ * @list: Doubly linked list with nodes to sort acording to number n.
+ * @aux: auxiliar node to compare
  */
-void dll_adj_swap(listint_t **list, listint_t *left, listint_t *right)
+void swap_head(listint_t **list, listint_t *aux)
 {
-	listint_t *swap;
-
-	if (left->prev)
-		left->prev->next = right;
-	else
-		*list = right;
-	if (right->next)
-		right->next->prev = left;
-	right->prev = left->prev;
-	left->prev = right;
-	swap = right;
-	left->next = right->next;
-	swap->next = left;
-
-	print_list(*list);
+	aux->prev->next = aux->next;
+	if (aux->next)
+		aux->next->prev = aux->prev;
+	aux->next = aux->prev;
+	aux->prev = aux->prev->prev;
+	aux->next->prev = aux;
+	*list = aux;
 }
-
 /**
- * cocktail_sort_list - sorts a doubly linked list of integers in ascending
- * order using an cocktail shaker sort algorithm
- * @list: doubly linked list of integers to be sorted
+ * swap_middle - swaps a node at the middle of the list
+ * @aux: auxiliar node to compare
+ */
+void swap_middle(listint_t *aux)
+{
+	aux->prev->next = aux->next;
+	aux->next->prev = aux->prev;
+	aux->prev->prev->next = aux;
+	aux->next = aux->prev;
+	aux->prev = aux->next->prev;
+	aux->next->prev = aux;
+}
+/**
+ * swap_tail - swaps a node at the end of the list
+ * @aux: auxiliar node to compare
+ */
+void swap_tail(listint_t *aux)
+{
+	aux->prev->next = aux->next;
+	aux->next = aux->prev;
+	aux->prev->prev->next = aux;
+	aux->prev = aux->next->prev;
+	aux->next->prev = aux;
+}
+/**
+ * evaluate_swap - checks the position to do the swap
+ * @list: Doubly linked list with nodes to sort acording to number n.
+ * @aux: auxiliar node to compare
+ */
+void evaluate_swap(listint_t **list, listint_t *aux)
+{
+	if (!aux->prev->prev)
+		swap_head(list, aux);
+	else if (aux->prev->prev && aux->next)
+		swap_middle(aux);
+	else if (!aux->next)
+		swap_tail(aux);
+}
+/**
+ * cocktail_sort_list - Cocktail Sort is a variation of Bubble sort.
+ * The Bubble sort algorithm always traverses elements from left and
+ * moves the largest element to its correct position in first iteration
+ * and second largest in second iteration and so on. Cocktail Sort traverses
+ * through a given array in both directions alternatively.
+ * @list: Doubly linked list with nodes to sort acording to number n.
  */
 void cocktail_sort_list(listint_t **list)
 {
-	bool swapped_f, swapped_b;
-	int shake_range = 1000000, checks;
-	listint_t *temp;
+	listint_t *aux = NULL, *tmp;
+	int swap_flag = 1;
 
-	if (!list || !(*list) || !(*list)->next)
+	if (!list || !(*list)->next)
 		return;
-
-	temp = *list;
-	do {
-		swapped_f = swapped_b = false;
-		for (checks = 0; temp->next && checks < shake_range; checks++)
+	aux = tmp = (*list)->next;
+	while (swap_flag)
+	{
+		aux = tmp, swap_flag = 0;
+		while (aux)
 		{
-			if (temp->next->n < temp->n)
+			if (aux->prev && aux->n < aux->prev->n)
 			{
-				dll_adj_swap(list, temp, temp->next);
-				swapped_f = true;
+				evaluate_swap(list, aux);
+				print_list(*list), swap_flag = 1;
 			}
+			if (aux->next != NULL)
+				aux = aux->next;
 			else
-				temp = temp->next;
+				break;
 		}
-		if (!temp->next)  /* first loop, measuring list */
-			shake_range = checks;
-		if (swapped_f)
-			temp = temp->prev;
-		shake_range--;
-		for (checks = 0; temp->prev && checks < shake_range; checks++)
+		aux = aux->prev;
+		while (aux->prev)
 		{
-			if (temp->n < temp->prev->n)
+			if (aux->prev && aux->prev->n > aux->n)
 			{
-				dll_adj_swap(list, temp->prev, temp);
-				swapped_b = true;
+				evaluate_swap(list, aux);
+				print_list(*list), swap_flag = 1;
 			}
-			else
-				temp = temp->prev;
+			else if (aux->prev)
+				aux = aux->prev;
 		}
-		if (swapped_b)
-			temp = temp->next;
-	} while (swapped_f || swapped_b);
+	}
 }
