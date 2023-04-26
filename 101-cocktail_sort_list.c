@@ -1,62 +1,73 @@
 #include "sort.h"
 
-void move_left(listint_t *curr, listint_t *prev, listint_t **head);
-
 /**
-* cocktail_sort_list - coctail sort in doubly linked list
-* @list: A Doubly linked list
-*/
-
-void cocktail_sort_list(listint_t **list)
+ * dll_adj_swap - swaps two adjacent nodes of a doubly linked list
+ * @list: doubly linked list of integers to be sorted
+ * @left: node closer to head, right->prev
+ * @right: node closer to tail, left->next
+ */
+void dll_adj_swap(listint_t **list, listint_t *left, listint_t *right)
 {
-	listint_t *cur;
-	listint_t *max = NULL;
-	listint_t *min = NULL;
+	listint_t *swap;
 
-	if (!list || !(*list) || (*list)->next == NULL)
-		return;
-	cur = *list;
-	do {
-		while (cur->next)
-		{
-			if (cur->n > cur->next->n)
-				move_left(cur->next, cur, list);
-			else
-				cur = cur->next;
-		}
-		max = cur;
-		while (cur->prev != min)
-		{
-			if (cur->n < cur->prev->n)
-				move_left(cur, cur->prev, list);
-			else
-				cur = cur->prev;
-		}
-		min = cur;
-	} while (min != max);
+	if (left->prev)
+		left->prev->next = right;
+	else
+		*list = right;
+	if (right->next)
+		right->next->prev = left;
+	right->prev = left->prev;
+	left->prev = right;
+	swap = right;
+	left->next = right->next;
+	swap->next = left;
+
+	print_list(*list);
 }
 
 /**
-* move_left - swaps two members of a list
-*
-* @curr: current node
-* @prev: previous node
-* @head: head of list
-*/
-void move_left(listint_t *curr, listint_t *prev, listint_t **head)
+ * cocktail_sort_list - sorts a doubly linked list of integers in ascending
+ * order using an cocktail shaker sort algorithm
+ * @list: doubly linked list of integers to be sorted
+ */
+void cocktail_sort_list(listint_t **list)
 {
-	listint_t *swap1 = curr->next;
-	listint_t *swap2 = prev->prev;
+	bool swapped_f, swapped_b;
+	int shake_range = 1000000, checks;
+	listint_t *temp;
 
-	if (swap1 != NULL)
-		swap1->prev = prev;
-	if (swap2 != NULL)
-		swap2->next = curr;
-	curr->prev = swap2;
-	prev->next = swap1;
-	curr->next = prev;
-	prev->prev = curr;
-	if (*head == prev)
-		*head = curr;
-	print_list(*head);
+	if (!list || !(*list) || !(*list)->next)
+		return;
+
+	temp = *list;
+	do {
+		swapped_f = swapped_b = false;
+		for (checks = 0; temp->next && checks < shake_range; checks++)
+		{
+			if (temp->next->n < temp->n)
+			{
+				dll_adj_swap(list, temp, temp->next);
+				swapped_f = true;
+			}
+			else
+				temp = temp->next;
+		}
+		if (!temp->next)  /* first loop, measuring list */
+			shake_range = checks;
+		if (swapped_f)
+			temp = temp->prev;
+		shake_range--;
+		for (checks = 0; temp->prev && checks < shake_range; checks++)
+		{
+			if (temp->n < temp->prev->n)
+			{
+				dll_adj_swap(list, temp->prev, temp);
+				swapped_b = true;
+			}
+			else
+				temp = temp->prev;
+		}
+		if (swapped_b)
+			temp = temp->next;
+	} while (swapped_f || swapped_b);
 }
